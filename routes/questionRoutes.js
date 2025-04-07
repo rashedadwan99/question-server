@@ -7,17 +7,18 @@ const {
   updateQuestion,
   deleteQuestion,
 } = require("../controllers/questionsController");
+const { auth } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.post("/", sendQuestion);
+router.post("/", auth, sendQuestion);
 
-router.get("/", getQuestions);
+router.get("/", auth, getQuestions);
 
-router.get("/:id", getSingleQuestion);
+router.get("/:id", auth, getSingleQuestion);
 
-router.put("/:id", updateQuestion);
+router.put("/:id", auth, updateQuestion);
 
-router.delete("/:id", deleteQuestion);
+router.delete("/:id", auth, deleteQuestion);
 
 module.exports = router;

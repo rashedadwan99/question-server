@@ -1,3 +1,5 @@
+const User = require("../models/userModel");
+
 const auth = async (req, res, next) => {
   try {
     const apiToken = req.query.api_token;

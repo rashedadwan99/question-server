@@ -15,14 +15,12 @@ const QuestionSchema = new mongoose.Schema(
         text: { type: String, required: false },
       },
     ],
-    correctAnswers: [
-      {
-        type: String,
-        required: function () {
-          return this.type === "multiple";
-        },
+    correctChoice: {
+      type: String,
+      required: function () {
+        return this.type === "multiple";
       },
-    ],
+    },
 
     // For matching questions
     matchingPairs: [

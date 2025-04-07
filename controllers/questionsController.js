@@ -9,7 +9,7 @@ const sendQuestion = async (req, res) => {
       matchingPairs,
       correctAnswer,
       choices,
-      correctAnswers,
+      correctChoice,
     } = req.body;
 
     // Validate filling
@@ -33,9 +33,9 @@ const sendQuestion = async (req, res) => {
           .status(400)
           .json({ error: "Multiple choice questions must have choices." });
       }
-      if (!correctAnswers || correctAnswers.length === 0) {
+      if (!correctChoice || correctChoice.length === 0) {
         return res.status(400).json({
-          error: "Multiple choice questions must have correctAnswers.",
+          error: "Multiple choice questions must have correctChoice.",
         });
       }
     }
@@ -47,7 +47,7 @@ const sendQuestion = async (req, res) => {
       matchingPairs,
       correctAnswer,
       choices,
-      correctAnswers,
+      correctChoice,
     });
 
     await newQuestion.save();
