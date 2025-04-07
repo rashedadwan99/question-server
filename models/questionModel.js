@@ -5,27 +5,48 @@ const QuestionSchema = new mongoose.Schema(
     content: { type: String, required: true },
     type: {
       type: String,
-      enum: ["simple", "matching", "filling"], // Add 'filling' as a type
+      enum: ["multiple", "matching", "filling"],
       required: true,
     },
+
+    // For multiple choice questions
+    choices: [
+      {
+        text: { type: String, required: false },
+      },
+    ],
+    correctAnswers: [
+      {
+        type: String,
+        required: function () {
+          return this.type === "multiple";
+        },
+      },
+    ],
+
+    // For matching questions
+    matchingPairs: [
+      {
+        left: { type: String, required: false },
+        right: { type: String, required: false },
+      },
+    ],
+
+    // For filling questions
+    correctAnswer: {
+      type: String,
+      required: function () {
+        return this.type === "filling";
+      },
+    },
+
+    // Optional: reference to answers (could be used for analytics, logs, etc.)
     answers: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Answer",
       },
     ],
-    matchingPairs: [
-      {
-        left: { type: String, required: false }, // Only for matching
-        right: { type: String, required: false },
-      },
-    ],
-    correctAnswer: {
-      type: String,
-      required: function () {
-        return this.type === "filling";
-      },
-    }, // Only for filling questions
   },
   {
     timestamps: true,
