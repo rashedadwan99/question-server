@@ -37,14 +37,6 @@ const QuestionSchema = new mongoose.Schema(
         return this.type === "filling";
       },
     },
-
-    // Optional: reference to answers (could be used for analytics, logs, etc.)
-    answers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Answer",
-      },
-    ],
   },
   {
     timestamps: true,

@@ -11,9 +11,9 @@ const { auth } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.post("/", auth, sendQuestion);
+router.post("/", sendQuestion);
 
-router.get("/", auth, getQuestions);
+router.get("/", getQuestions);
 
 router.get("/:id", auth, getSingleQuestion);
 

@@ -1,81 +1,81 @@
 const Question = require("../models/questionModel");
 const UserAnswer = require("../models/UserAnswer");
 
-const submitAnswer = async (req, res) => {
+const submitAnswers = async (req, res) => {
   try {
-    const {
-      universityNumber,
-      name,
-      questionId,
-      selectedChoice,
-      filledAnswer,
-      matchingAnswer,
-    } = req.body;
+    const payload = req.body;
 
-    // Check if this universityNumber already answered the question
-    const alreadyAnswered = await UserAnswer.findOne({
-      universityNumber,
-      question: questionId,
-    });
-    if (alreadyAnswered) {
-      return res.status(400).json({
-        message: "You have already submitted an answer for this question.",
-      });
+    if (!Array.isArray(payload) || payload.length < 2) {
+      return res.status(400).json({ message: "Invalid submission format." });
     }
 
-    const question = await Question.findById(questionId);
-    if (!question) {
-      return res.status(404).json({ message: "Question not found" });
-    }
+    const { name, universityNumber } = payload[0];
 
-    let isCorrect = false;
-
-    if (question.type === "multiple" && selectedChoice) {
-      isCorrect = question.correctChoice === selectedChoice;
-    } else if (question.type === "filling" && filledAnswer) {
-      isCorrect =
-        question.correctAnswer.trim().toLowerCase() ===
-        filledAnswer.trim().toLowerCase();
-    } else if (question.type === "matching" && matchingAnswer?.length) {
-      const correctPairs = question.matchingPairs || [];
-      isCorrect = matchingAnswer.every((pair, idx) => {
-        return (
-          pair.left === correctPairs[idx]?.left &&
-          pair.right === correctPairs[idx]?.right
-        );
-      });
-    }
-
-    const newAnswer = new UserAnswer({
-      universityNumber,
-      name,
-      question: questionId,
-      selectedChoice,
-      filledAnswer,
-      matchingAnswer,
-      isCorrect,
-    });
-
-    await newAnswer.save();
-    res
-      .status(201)
-      .json({ message: "Answer submitted successfully", isCorrect });
-  } catch (error) {
-    if (error.code === 11000) {
+    // Check if the user has already submitted any answers
+    const alreadySubmitted = await UserAnswer.findOne({ universityNumber });
+    if (alreadySubmitted) {
       return res
         .status(400)
-        .json({ message: "Duplicate submission not allowed." });
+        .json({ message: "You have already submitted your answers." });
     }
+
+    const results = [];
+
+    for (let i = 1; i < payload.length; i++) {
+      const answer = payload[i];
+      const question = await Question.findById(answer.questionId);
+      if (!question) continue;
+
+      let isCorrect = false;
+
+      if (question.type === "multiple" && answer.selectedChoice) {
+        isCorrect = question.correctChoice === answer.selectedChoice;
+      } else if (question.type === "filling" && answer.filledAnswer) {
+        isCorrect =
+          question.correctAnswer.trim().toLowerCase() ===
+          answer.filledAnswer.trim().toLowerCase();
+      } else if (
+        question.type === "matching" &&
+        answer.matchingAnswer?.length
+      ) {
+        const correctPairs = question.matchingPairs || [];
+        isCorrect = answer.matchingAnswer.every((pair, idx) => {
+          return (
+            pair.left === correctPairs[idx]?.left &&
+            pair.right === correctPairs[idx]?.right
+          );
+        });
+      }
+
+      const newAnswer = new UserAnswer({
+        universityNumber,
+        name,
+        question: question._id,
+        selectedChoice: answer.selectedChoice,
+        filledAnswer: answer.filledAnswer,
+        matchingAnswer: answer.matchingAnswer,
+        isCorrect,
+      });
+
+      await newAnswer.save();
+      results.push({ questionId: question._id, isCorrect });
+    }
+
+    res.status(201).json({
+      message: "All answers submitted successfully.",
+      results,
+    });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-const getAnswers = async (req, res) => {
+
+const getUserAnswers = async (req, res) => {
   try {
-    const { universityNumber, questionId } = req.query;
+    const { universityNumber } = req.query;
 
     const query = {};
     if (universityNumber) query.universityNumber = universityNumber;
-    if (questionId) query.question = questionId;
 
     const answers = await UserAnswer.find(query).populate("question");
     res.json(answers);
@@ -83,7 +83,51 @@ const getAnswers = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const checkIfSubmitted = async (req, res) => {
+  try {
+    const { universityNumber } = req.query;
+
+    const alreadyAnswered = await UserAnswer.findOne({
+      universityNumber,
+    });
+    if (alreadyAnswered) {
+      return res.status(400).json({
+        message: "The exam was submitted by this student.",
+      });
+    }
+    res.status(200);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+const getAllUserIdentifiers = async (req, res) => {
+  try {
+    const identifiers = await UserAnswer.aggregate([
+      {
+        $group: {
+          _id: "$universityNumber",
+          name: { $first: "$name" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          universityNumber: "$_id",
+          name: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json(identifiers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
-  submitAnswer,
-  getAnswers,
+  submitAnswers,
+  checkIfSubmitted,
+  getUserAnswers,
+  getAllUserIdentifiers,
 };

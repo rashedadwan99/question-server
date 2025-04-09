@@ -3,7 +3,7 @@ const Answer = require("../models/AnswerModel");
 const Question = require("../models/questionModel");
 const {
   sendAnswer,
-  getAnswers,
+  getUserAnswers,
   getOneAnswer,
   updateAnswer,
   deleteAnswer,
@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.post("/", sendAnswer);
 
-router.get("/", getAnswers);
+router.get("/", getUserAnswers);
 
 router.get("/:id", getOneAnswer);
 
