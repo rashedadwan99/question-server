@@ -17,9 +17,7 @@ const QuestionSchema = new mongoose.Schema(
     ],
     correctChoice: {
       type: String,
-      required: function () {
-        return this.type === "multiple";
-      },
+      default: "",
     },
 
     // For matching questions
@@ -33,9 +31,7 @@ const QuestionSchema = new mongoose.Schema(
     // For filling questions
     correctAnswer: {
       type: String,
-      required: function () {
-        return this.type === "filling";
-      },
+      default: "",
     },
   },
   {
